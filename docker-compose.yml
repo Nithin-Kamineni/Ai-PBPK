@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  # web container, with django + gunicorn
+  aipbpk_server:
+    container_name: aipbpk_server_container
+    restart: unless-stopped
+    image: aipbpk-server-image:1.0.0
+    build:
+      context: aipbpk-backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./ipbpk-backend/static/:/static/
+    ports:
+      - "8000:8000"
+    environment:
+      # - Rserver=http://localhost/rapi/
+      - Rserver=http://rserver_container:9000/
+    networks:
+      - shared-network
+
+  rserver:
+    container_name: rserver_container
+    build:
+      context: R-API
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    image: rserver-image:1.0.0
+    ports:
+      - "9000:9000"
+    depends_on:
+      - aipbpk_server
+    networks:
+      - shared-network
+
+  reactapp:
+    container_name: aipbpk_client_container
+    restart: unless-stopped
+    image: aipbpk-client-image:1.0.0
+    build:
+      context: aipbpk-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost/api/v1/api
+    volumes:
+      - ./certs/devopsbyexample-key.pem:/etc/nginx/certs/devopsbyexample-key.pem
+      - ./certs/devopsbyexample.pem:/etc/nginx/certs/devopsbyexample.pem
+    networks:
+      - shared-network
+    depends_on:
+      - aipbpk_server
+      - rserver
+
+  nginx:
+    image: nginx
+    # container_name: nginx_container
+    restart: always
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+      # - ./certs/localsslexample-key.pem:/etc/nginx/certs/devopsbyexample-key.pem
+      # - ./certs/localsslexample.pem:/etc/nginx/certs/devopsbyexample.pem
+    ports:
+      - 80:80
+      # - 443:443
+    depends_on:
+      - aipbpk_server
+      - rserver
+    networks:
+      - shared-network
+
+networks:
+  shared-network:
