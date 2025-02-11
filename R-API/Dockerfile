@@ -28,6 +28,6 @@ EXPOSE 9000
 # when the container starts, start the main.R script
 ENTRYPOINT ["Rscript", "runapi.R"]
 
-#docker rmi rserver-image:1.0.0 --force
+#docker rmi nanoplastics-rserver:1.0.0 --force
 #docker-compose build
-#docker run -p 9000:9000 rserver-image:1.0.0
+#docker run -p 9000:9000 nanoplastics-rserver:1.0.0

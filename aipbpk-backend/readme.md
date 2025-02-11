@@ -7,4 +7,6 @@ python -m venv pbpkv1
 
 pip install -r requirements.txt
 
+python runserver manage.py 
+
 pip freeze > requirements.txt
